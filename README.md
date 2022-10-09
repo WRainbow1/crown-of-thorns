@@ -1,4 +1,4 @@
-# Crown of Thorns Starfish Great Barrier Reef Starfish Detections
+# Crown of Thorns Starfish Object Detection
 
 This repository contains the code to train an object-detection ML Model for detecting Crown-of-Thorns Starfish, an invasive species on the Great Barrier Reef
 
