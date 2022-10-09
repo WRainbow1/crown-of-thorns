@@ -1,0 +1,21 @@
+sudo docker run --rm training                   \
+-id=subset/train_images                         \
+-ld=subset                                      \
+-lf=train.csv                                   \
+-tfd=subset/tfrecords                           \
+-md=model                                       \
+-tf=train.tfrec                                 \
+-vf=val.tfrec                                   \
+-bs=4                                           \
+-e=1
+
+
+-id=data/train_images
+-ld=data
+-lf=train.csv
+-tfd=data/tfrecords
+-md=model
+-tf=train.tfrec
+-vf=val.tfrec
+-bs=4
+-e=50

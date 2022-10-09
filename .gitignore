@@ -2,3 +2,5 @@ data/
 data temp/
 subset/
 src/retinanet/
+src/utils/creds.json
+/__pycache__/

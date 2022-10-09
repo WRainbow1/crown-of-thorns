@@ -1,29 +1,36 @@
 import os
 import re
 import argparse
+from google.cloud import storage
 
 import tensorflow as tf
+tf.config.run_functions_eagerly(True)
 
-from utils.utils import (preprocess_data,
+from src.utils.utils import (preprocess_data,
                         LabelEncoder,
                         parse_tfrecord_fn)
 
-from utils.model import (get_backbone,
+from src.utils.model import (get_backbone,
                         RetinaNet,
                         RetinaNetLoss)
+
+import src.utils.config as config
 
 def main(model_dir : str,
          data_dir : str,
          train_file : str,
          val_file : str,
          batch_size : int,
-         
-         ):
+         epochs : int):
+
+    print('starting training')
+
+    local_trainfile = 'trainfile.tfrec'
+    local_valfile = 'valfile.tfrec'
 
     label_encoder = LabelEncoder()
 
     num_classes = 1
-    batch_size = 2
 
     learning_rates = [2.5e-06, 0.000625, 0.00125, 0.0025, 0.00025, 2.5e-05]
     learning_rate_boundaries = [125, 250, 500, 240000, 360000]
@@ -40,7 +47,7 @@ def main(model_dir : str,
 
     callbacks_list = [
         tf.keras.callbacks.ModelCheckpoint(
-            filepath=os.path.join(model_dir, "weights" + "_epoch_{epoch}"),
+            filepath=os.path.join('gs://crown-of-thorns-data', 'model', "weights" + "_epoch_{epoch}"),
             monitor="loss",
             save_best_only=False,
             save_weights_only=True,
@@ -48,10 +55,18 @@ def main(model_dir : str,
         )
     ]
 
+    client = storage.Client.from_service_account_json('src/utils/creds.json', project = 'crown-of-thorns')
+    bucket = client.get_bucket('crown-of-thorns-data')
+
+    blob = bucket.blob(f"{data_dir}/{train_file}")
+    blob.download_to_filename(local_trainfile)
+
+    blob = bucket.blob(f"{data_dir}/{train_file}")
+    blob.download_to_filename(local_valfile)
+
     autotune = tf.data.AUTOTUNE
-    tfrecords_dir = '../data/tfrecords'
-    train_dataset = tf.data.TFRecordDataset(f"{data_dir}/{train_file}").map(parse_tfrecord_fn).prefetch(autotune)
-    val_dataset = tf.data.TFRecordDataset(f"{data_dir}/{val_file}").map(parse_tfrecord_fn).prefetch(autotune)
+    train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
+    val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
 
     autotune = tf.data.AUTOTUNE
     train_dataset = train_dataset.map(preprocess_data, num_parallel_calls=autotune)
@@ -72,11 +87,6 @@ def main(model_dir : str,
     val_dataset = val_dataset.prefetch(autotune)
 
     # Uncomment the following lines, when training on full dataset
-    train_size = int(re.findall(r'\d+', 'file_00-3443.tfrec'.split('-')[1])[0])
-    train_steps_per_epoch = train_size // batch_size
-
-    train_steps = 4 * 100000
-    epochs = train_steps // train_steps_per_epoch
 
     model.fit(
         train_dataset,
@@ -86,24 +96,21 @@ def main(model_dir : str,
         verbose=1,
     )
 
+    print('done')
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_dir', '-md', type=str,
-                        help='directory to save the model, should be in a GCP bucket',
-                        default = 'retinanet/')
+                        help='directory to save the model, should be in a GCP bucket')
     parser.add_argument('--data_dir', '-dd', type=str,
-                        help='training data directory, should be in a GCP bucket',
-                        default = 'data/tfrecords')
+                        help='training data directory, should be in a GCP bucket')
     parser.add_argument('--train_file', '-tf', type=str,
-                        help='training file name',
-                        default = 'file_00-3443.tfrec')
+                        help='training file name')
     parser.add_argument('--val_file', '-vf', type=str,
-                        help='validation file name',
-                        default = 'file_01-737.tfrec')
+                        help='validation file name')
     parser.add_argument('--batch_size', '-bs', type=int,
-                        help='size of training batches for model',
-                        default = 4)
+                        help='size of training batches for model')
 
     args = parser.parse_args()
 

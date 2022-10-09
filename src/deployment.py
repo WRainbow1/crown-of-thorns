@@ -1,4 +1,4 @@
-import config
+import utils.config as config
 import subprocess
 
 from typing import NamedTuple
@@ -30,13 +30,13 @@ cli("gcloud services enable compute.googleapis.com              \
                             containerregistry.googleapis.com    \
                             aiplatform.googleapis.com           \
                             cloudbuild.googleapis.com           \
-                            cloudfunctions.googleapis.com")
-
+                            cloudfunctions.googleapis.com       \
+                            dataflow.googleapis.com")
 
 # Set bucket name
-BUCKET_NAME="gs://"+config.project+"-bucket-winequality"
+BUCKET_NAME="gs://crown-of-thorns-data"
 
 # Create bucket
-PIPELINE_ROOT = f"{BUCKET_NAME}/pipeline_root_wine/"
+# PIPELINE_ROOT = f"{BUCKET_NAME}/pipeline_root_wine/"
 
 #!gcloud auth login if needed

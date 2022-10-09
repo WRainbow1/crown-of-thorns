@@ -1,0 +1,9 @@
+google-cloud-storage
+gcloud
+numpy
+oauth2client
+pandas
+tensorflow
+matplotlib
+httplib2==0.15.0
+google-api-python-client==1.6
