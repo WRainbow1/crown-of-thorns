@@ -11,15 +11,16 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["-id","subset/train_images",
-                    "-ld","subset",
+            "args": ["-p","0",
+                    "-id","data/train_images",
+                    "-ld","data",
                     "-lf","train.csv",
-                    "-tfd","subset/tfrecords", 
-                    "-md","model ",
+                    "-tfd","data/tfrecords", 
+                    "-md","model",
                     "-tf","train.tfrec",
                     "-vf","val.tfrec ",
-                    "-bs","4",
-                    "-e","2"]
+                    "-bs","1",
+                    "-e","50"]
         }
     ]
 }

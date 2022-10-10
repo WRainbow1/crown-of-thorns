@@ -47,7 +47,7 @@ def main(model_dir : str,
 
     callbacks_list = [
         tf.keras.callbacks.ModelCheckpoint(
-            filepath=os.path.join('gs://crown-of-thorns-data', 'model', "weights" + "_epoch_{epoch}"),
+            filepath=os.path.join('model', "weights" + "_epoch_{epoch}"),
             monitor="loss",
             save_best_only=False,
             save_weights_only=True,
@@ -58,11 +58,13 @@ def main(model_dir : str,
     client = storage.Client.from_service_account_json('src/utils/creds.json', project = 'crown-of-thorns')
     bucket = client.get_bucket('crown-of-thorns-data')
 
-    blob = bucket.blob(f"{data_dir}/{train_file}")
-    blob.download_to_filename(local_trainfile)
+    if 'trainfile.tfrec' not in os.listdir():
+        blob = bucket.blob(f"{data_dir}/{train_file}")
+        blob.download_to_filename(local_trainfile)
 
-    blob = bucket.blob(f"{data_dir}/{train_file}")
-    blob.download_to_filename(local_valfile)
+    if 'valfile.tfrec' not in os.listdir():
+        blob = bucket.blob(f"{data_dir}/{train_file}")
+        blob.download_to_filename(local_valfile)
 
     autotune = tf.data.AUTOTUNE
     train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
@@ -70,7 +72,8 @@ def main(model_dir : str,
 
     autotune = tf.data.AUTOTUNE
     train_dataset = train_dataset.map(preprocess_data, num_parallel_calls=autotune)
-    train_dataset = train_dataset.shuffle(8 * batch_size)
+
+    train_dataset = train_dataset.shuffle(batch_size)
     train_dataset = train_dataset.padded_batch(
         batch_size=batch_size, padding_values=(0.0, 1e-8, -1), drop_remainder=True, padded_shapes=([1024,1280,3], [None, None], [None])
     )
@@ -87,14 +90,32 @@ def main(model_dir : str,
     val_dataset = val_dataset.prefetch(autotune)
 
     # Uncomment the following lines, when training on full dataset
+    if len(tf.config.list_physical_devices('GPU')) > 0:
 
-    model.fit(
-        train_dataset,
-        validation_data=val_dataset,
-        epochs=epochs,
-        callbacks=callbacks_list,
-        verbose=1,
-    )
+        with tf.device('GPU:0'):
+            print('starting GPU model.fit')
+
+            tf.compat.v1.GPUOptions(allow_growth=True)
+            model.fit(
+                train_dataset,
+                validation_data=val_dataset,
+                epochs=epochs,
+                callbacks=callbacks_list,
+                verbose=1,
+                batch_size=1
+            )
+
+    else:
+        print('starting CPU model.fit')
+        model.fit(
+                train_dataset,
+                validation_data=val_dataset,
+                epochs=epochs,
+                callbacks=callbacks_list,
+                verbose=1,
+                batch_size=1
+            )
+
 
     print('done')
 
