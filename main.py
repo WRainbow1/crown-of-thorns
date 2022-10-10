@@ -6,6 +6,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--preprocess', '-p', type=int,
                         help='whether or not to perform preprocessing.')
+    parser.add_argument('--cloud', '-c', type=int,
+                        help='process on cloud or locally.')
     parser.add_argument('--image_dir', '-id', type=str,
                         help='directory to save the model, should be in a GCP bucket')
     parser.add_argument('--label_dir', '-ld', type=str,
@@ -28,18 +30,20 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.preprocess:
-        preprocessing.main(args.image_dir,
-                                args.label_dir,
-                                args.label_file,
-                                args.tfrecords_dir)
+        preprocessing.main(args.cloud,
+                           args.image_dir,
+                           args.label_dir,
+                           args.label_file,
+                           args.tfrecords_dir)
     else:
         print('not running preprocessing, assuming tfrecords already available')
 
     print("Num GPUs Available:", len(tf.config.list_physical_devices('GPU')))
 
-    train.main(args.model_dir,
-                    args.tfrecords_dir,
-                    args.train_file,
-                    args.val_file,
-                    args.batch_size,
-                    args.epochs)
+    train.main(args.cloud,
+               args.model_dir,
+               args.tfrecords_dir,
+               args.train_file,
+               args.val_file,
+               args.batch_size,
+               args.epochs)

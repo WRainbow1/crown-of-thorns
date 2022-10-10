@@ -31,20 +31,25 @@ def parse_labels(array):
     return np.zeros(array.shape[0], dtype=int)
 
 
-def main(image_dir : str,
+def main(cloud : int,
+         image_dir : str,
          label_dir : str,
          label_file : str,
          tfrecords_dir : str):
 
-    local_labelfile = 'train.csv'
-    local_imagefile = 'image.jpg'
+    if cloud:
 
-    client = storage.Client.from_service_account_json('src/utils/creds.json', project = 'crown-of-thorns')
-    bucket = client.get_bucket('crown-of-thorns-data')
+        local_labelfile = 'train.csv'
+        local_imagefile = 'image.jpg'
+        client = storage.Client.from_service_account_json('src/utils/creds.json', project = 'crown-of-thorns')
+        bucket = client.get_bucket('crown-of-thorns-data')
 
-    blob = bucket.blob(label_dir+'/'+label_file)
-    blob.download_to_filename(local_labelfile)
-    df = pd.read_csv(local_labelfile)
+        blob = bucket.blob(label_dir+'/'+label_file)
+        blob.download_to_filename(local_labelfile)
+        df = pd.read_csv(local_labelfile)
+
+    else:
+        df = pd.read_csv(os.path.join(label_dir, label_file))
 
     df['annotations'] = df['annotations'].apply(lambda x: parse_coords(ast.literal_eval(x)))
     df = df[df['annotations']!='-']
@@ -72,14 +77,18 @@ def main(image_dir : str,
         ) as writer:
             for sample in samples:
                 image_path = f"{image_dir}/{sample['image_id']}.jpg"
-                blob = bucket.blob(image_path)
-                blob.download_to_filename(local_imagefile)
-                image = tf.io.decode_jpeg(tf.io.read_file(local_imagefile))
+                if cloud:
+                    blob = bucket.blob(image_path)
+                    blob.download_to_filename(local_imagefile)
+                    image = tf.io.decode_jpeg(tf.io.read_file(local_imagefile))
+                else:
+                    image = tf.io.decode_jpeg(tf.io.read_file(image_path))
                 example = create_example(image, image_path, sample)
                 writer.write(example.SerializeToString())
         
-        blob = bucket.blob(tfrecords_dir + f"/{file_name}.tfrec")
-        blob.upload_from_filename(f"{file_name}.tfrec")
+        if cloud:
+            blob = bucket.blob(tfrecords_dir + f"/{file_name}.tfrec")
+            blob.upload_from_filename(f"{file_name}.tfrec")
 
     print('ending tfrecord write')
 

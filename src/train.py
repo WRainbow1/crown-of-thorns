@@ -16,7 +16,8 @@ from src.utils.model import (get_backbone,
 
 import src.utils.config as config
 
-def main(model_dir : str,
+def main(cloud : int,
+         model_dir : str,
          data_dir : str,
          train_file : str,
          val_file : str,
@@ -24,9 +25,6 @@ def main(model_dir : str,
          epochs : int):
 
     print('starting training')
-
-    local_trainfile = 'trainfile.tfrec'
-    local_valfile = 'valfile.tfrec'
 
     label_encoder = LabelEncoder()
 
@@ -47,7 +45,7 @@ def main(model_dir : str,
 
     callbacks_list = [
         tf.keras.callbacks.ModelCheckpoint(
-            filepath=os.path.join('model', "weights" + "_epoch_{epoch}"),
+            filepath=os.path.join(model_dir, "weights" + "_epoch_{epoch}"),
             monitor="loss",
             save_best_only=False,
             save_weights_only=True,
@@ -55,22 +53,31 @@ def main(model_dir : str,
         )
     ]
 
-    client = storage.Client.from_service_account_json('src/utils/creds.json', project = 'crown-of-thorns')
-    bucket = client.get_bucket('crown-of-thorns-data')
+    local_trainfile = 'train.tfrec'
+    local_valfile = 'val.tfrec'
 
-    if 'trainfile.tfrec' not in os.listdir():
-        blob = bucket.blob(f"{data_dir}/{train_file}")
-        blob.download_to_filename(local_trainfile)
+    if cloud:
 
-    if 'valfile.tfrec' not in os.listdir():
-        blob = bucket.blob(f"{data_dir}/{train_file}")
-        blob.download_to_filename(local_valfile)
+        client = storage.Client.from_service_account_json('src/utils/creds.json', project = 'crown-of-thorns')
+        bucket = client.get_bucket('crown-of-thorns-data')
+
+        if local_trainfile not in os.listdir():
+            blob = bucket.blob(f"{data_dir}/{train_file}")
+            blob.download_to_filename(local_trainfile)
+
+        if local_valfile not in os.listdir():
+            blob = bucket.blob(f"{data_dir}/{train_file}")
+            blob.download_to_filename(local_valfile)
+
+        train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
+        val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
+
+    else:
+        train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
+        val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
 
     autotune = tf.data.AUTOTUNE
-    train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
-    val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
 
-    autotune = tf.data.AUTOTUNE
     train_dataset = train_dataset.map(preprocess_data, num_parallel_calls=autotune)
 
     train_dataset = train_dataset.shuffle(batch_size)
