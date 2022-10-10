@@ -6,6 +6,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--preprocess', '-p', type=int,
                         help='whether or not to perform preprocessing.')
+    parser.add_argument('--train', '-t', type=int,
+                        help='whether or not to perform training.')
     parser.add_argument('--cloud', '-c', type=int,
                         help='process on cloud or locally.')
     parser.add_argument('--image_dir', '-id', type=str,
@@ -15,8 +17,8 @@ if __name__ == '__main__':
     parser.add_argument('--label_file', '-lf', type=str,
                         help='training file name')
     parser.add_argument('--tfrecords_dir', '-tfd', type=str,
-                        help='validation file name')
-    parser.add_argument('--model_dir', '-md', type=str,
+                        help='validation file name')      
+    parser.add_argument('--model_dir', '-md', type=str,                        
                         help='directory to save the model, should be in a GCP bucket')
     parser.add_argument('--train_file', '-tf', type=str,
                         help='training file name')
@@ -38,12 +40,26 @@ if __name__ == '__main__':
     else:
         print('not running preprocessing, assuming tfrecords already available')
 
-    print("Num GPUs Available:", len(tf.config.list_physical_devices('GPU')))
+    if args.train:
+        print("Num GPUs Available:", len(tf.config.list_physical_devices('GPU')))
+        if len(tf.config.list_physical_devices('GPU')) > 0:
 
-    train.main(args.cloud,
-               args.model_dir,
-               args.tfrecords_dir,
-               args.train_file,
-               args.val_file,
-               args.batch_size,
-               args.epochs)
+            with tf.device('GPU:0'):
+                print('starting GPU')
+
+                train.main(args.cloud,
+                        args.model_dir,
+                        args.tfrecords_dir,
+                        args.train_file,
+                        args.val_file,
+                        args.batch_size,
+                        args.epochs)
+        
+        else:
+            train.main(args.cloud,
+            args.model_dir,
+            args.tfrecords_dir,
+            args.train_file,
+            args.val_file,
+            args.batch_size,
+            args.epochs)

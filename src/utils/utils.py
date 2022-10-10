@@ -580,7 +580,7 @@ def parse_tfrecord_fn(example):
     example["image"] = tf.io.decode_jpeg(example["image"], channels=3)
 
     example["objects"] = {'bbox': tf.io.parse_tensor(example["objects"], out_type=tf.float32),
-                          'label': tf.io.parse_tensor(example['label'], tf.int64)}
+                          'label': tf.io.parse_tensor(example['label'], tf.int32)}
 
     del example['label']
 

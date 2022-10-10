@@ -12,7 +12,8 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["-p","1",
-                    "-c", "0",
+                    "-t" ,"0",
+                    "-c", "1",
                     "-id","data/train_images",
                     "-ld","data",
                     "-lf","train.csv",
@@ -21,7 +22,7 @@
                     "-tf","train.tfrec",
                     "-vf","val.tfrec ",
                     "-bs","1",
-                    "-e","10"]
+                    "-e","50"]
         }
     ]
 }

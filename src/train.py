@@ -45,7 +45,8 @@ def main(cloud : int,
 
     callbacks_list = [
         tf.keras.callbacks.ModelCheckpoint(
-            filepath=os.path.join(model_dir, "weights" + "_epoch_{epoch}"),
+            filepath=os.path.join("gs://crown-of-thorns-data"+model_dir if cloud else model_dir, 
+                                  "weights" + "_epoch_{epoch}"),
             monitor="loss",
             save_best_only=False,
             save_weights_only=True,
@@ -69,12 +70,11 @@ def main(cloud : int,
             blob = bucket.blob(f"{data_dir}/{train_file}")
             blob.download_to_filename(local_valfile)
 
-        train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
-        val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
+    train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
+    val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
 
-    else:
-        train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
-        val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
+    train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
+    val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
 
     autotune = tf.data.AUTOTUNE
 
@@ -97,32 +97,14 @@ def main(cloud : int,
     val_dataset = val_dataset.prefetch(autotune)
 
     # Uncomment the following lines, when training on full dataset
-    if len(tf.config.list_physical_devices('GPU')) > 0:
-
-        with tf.device('GPU:0'):
-            print('starting GPU model.fit')
-
-            tf.compat.v1.GPUOptions(allow_growth=True)
-            model.fit(
-                train_dataset,
-                validation_data=val_dataset,
-                epochs=epochs,
-                callbacks=callbacks_list,
-                verbose=1,
-                batch_size=1
-            )
-
-    else:
-        print('starting CPU model.fit')
-        model.fit(
-                train_dataset,
-                validation_data=val_dataset,
-                epochs=epochs,
-                callbacks=callbacks_list,
-                verbose=1,
-                batch_size=1
-            )
-
+    model.fit(
+        train_dataset,
+        validation_data=val_dataset,
+        epochs=epochs,
+        callbacks=callbacks_list,
+        verbose=1,
+        batch_size=1
+    )
 
     print('done')
 
