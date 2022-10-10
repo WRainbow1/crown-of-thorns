@@ -4,4 +4,3 @@ subset/
 src/retinanet/
 src/utils/creds.json
 /__pycache__/
-.vscode/
