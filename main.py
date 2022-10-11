@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     if args.train:
         print("Num GPUs Available:", len(tf.config.list_physical_devices('GPU')))
-        if len(tf.config.list_physical_devices('GPU')) > 0:
+        if len(tf.config.list_physical_devices('GPU')) > 0 and 1==2:
 
             with tf.device('GPU:0'):
                 print('starting GPU')

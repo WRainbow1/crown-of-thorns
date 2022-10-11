@@ -30,7 +30,7 @@ def main(cloud : int,
 
     num_classes = 1
 
-    learning_rates = [2.5e-06, 0.000625, 0.00125, 0.0025, 0.00025, 2.5e-05]
+    learning_rates = [2.5e-06, 1e-4, 1e-4, 1e-4, 1e-4, 2.5e-05] #[2.5e-06, 0.000625, 0.00125, 0.0025, 0.00025, 2.5e-05]
     learning_rate_boundaries = [125, 250, 500, 240000, 360000]
     learning_rate_fn = tf.optimizers.schedules.PiecewiseConstantDecay(
         boundaries=learning_rate_boundaries, values=learning_rates
@@ -45,7 +45,7 @@ def main(cloud : int,
 
     callbacks_list = [
         tf.keras.callbacks.ModelCheckpoint(
-            filepath=os.path.join("gs://crown-of-thorns-data"+model_dir if cloud else model_dir, 
+            filepath=os.path.join(model_dir, 
                                   "weights" + "_epoch_{epoch}"),
             monitor="loss",
             save_best_only=False,
@@ -80,7 +80,7 @@ def main(cloud : int,
 
     train_dataset = train_dataset.map(preprocess_data, num_parallel_calls=autotune)
 
-    train_dataset = train_dataset.shuffle(batch_size)
+    train_dataset = train_dataset.shuffle(8 * batch_size)
     train_dataset = train_dataset.padded_batch(
         batch_size=batch_size, padding_values=(0.0, 1e-8, -1), drop_remainder=True, padded_shapes=([1024,1280,3], [None, None], [None])
     )
@@ -91,7 +91,7 @@ def main(cloud : int,
     train_dataset = train_dataset.prefetch(autotune)
     val_dataset = val_dataset.map(preprocess_data, num_parallel_calls=autotune)
     val_dataset = val_dataset.padded_batch(
-        batch_size=1, padding_values=(0.0, 1e-8, -1), drop_remainder=True, padded_shapes=([1024,1280,3], [None, None], [None])
+        batch_size=batch_size, padding_values=(0.0, 1e-8, -1), drop_remainder=True, padded_shapes=([1024,1280,3], [None, None], [None])
     )
     val_dataset = val_dataset.map(label_encoder.encode_batch, num_parallel_calls=autotune)
     val_dataset = val_dataset.prefetch(autotune)
@@ -102,8 +102,7 @@ def main(cloud : int,
         validation_data=val_dataset,
         epochs=epochs,
         callbacks=callbacks_list,
-        verbose=1,
-        batch_size=1
+        verbose=1
     )
 
     print('done')

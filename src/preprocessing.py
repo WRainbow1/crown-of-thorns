@@ -22,7 +22,9 @@ import src.utils.config as config
 def parse_coords(coord_list):
     if coord_list != []:
         coords =  np.array([list(coord_dict.values()) for coord_dict in coord_list])
-        return tf.convert_to_tensor(np.array([(coords[:,0]+coords[:,2]/2)/1280, (coords[:,1]+coords[:,3]/2)/720, coords[:,2]/1280, coords[:,3]/720]).T, dtype=tf.float32)
+        return tf.convert_to_tensor(np.array([(coords[:,0]+coords[:,2]/2)/1280, 
+                                              (coords[:,1]+coords[:,3]/2)/720, 
+                                               coords[:,2]/1280, coords[:,3]/720]).T, dtype=tf.float32)
     else:
         # return tf.convert_to_tensor(np.array([[np.nan, np.nan, np.nan, np.nan]]), dtype=tf.float32)
         return '-'
@@ -85,6 +87,7 @@ def main(cloud : int,
                     image = tf.io.decode_jpeg(tf.io.read_file(image_path))
                 example = create_example(image, image_path, sample)
                 writer.write(example.SerializeToString())
+            writer.close()
         
         if cloud:
             blob = bucket.blob(tfrecords_dir + f"/{file_name}.tfrec")

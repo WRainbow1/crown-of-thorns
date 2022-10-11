@@ -308,7 +308,7 @@ def preprocess_data(sample):
     # bbox = swap_xy(sample["objects"]["bbox"])
     class_id = tf.cast(sample["objects"]["label"], dtype=tf.int32)
     image = tf.cast(image, dtype=tf.float32)
-    image, bbox = random_flip_horizontal(image, bbox)
+    # image, bbox = random_flip_horizontal(image, bbox)
     #image, image_shape, _ = resize_and_pad_image(image)
     image_shape = tf.cast(tf.shape(image)[:2], dtype=tf.float32)
 
@@ -459,7 +459,7 @@ class DecodePredictions(tf.keras.layers.Layer):
         max_detections=100,
         box_variance=[0.1, 0.1, 0.2, 0.2],
         **kwargs
-    ):
+        ):
         super(DecodePredictions, self).__init__(**kwargs)
         self.num_classes = num_classes
         self.confidence_threshold = confidence_threshold
@@ -580,7 +580,7 @@ def parse_tfrecord_fn(example):
     example["image"] = tf.io.decode_jpeg(example["image"], channels=3)
 
     example["objects"] = {'bbox': tf.io.parse_tensor(example["objects"], out_type=tf.float32),
-                          'label': tf.io.parse_tensor(example['label'], tf.int32)}
+                          'label': tf.io.parse_tensor(example['label'], tf.int64)}
 
     del example['label']
 
