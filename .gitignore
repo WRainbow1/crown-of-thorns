@@ -3,6 +3,7 @@ data/
 data temp/
 subset/
 src/retinanet/
+.ipynb_checkpoints/
 __pycache__/
 
 #file types

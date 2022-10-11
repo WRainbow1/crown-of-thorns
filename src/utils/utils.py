@@ -454,7 +454,7 @@ class DecodePredictions(tf.keras.layers.Layer):
         max_detections=100,
         box_variance=[0.1, 0.1, 0.2, 0.2],
         **kwargs
-    ):
+        ):
         super(DecodePredictions, self).__init__(**kwargs)
         self.num_classes = num_classes
         self.confidence_threshold = confidence_threshold

@@ -18,11 +18,11 @@
                     "-ld","data",
                     "-lf","train.csv",
                     "-tfd","data/tfrecords", 
-                    "-md","model",
+                    "-md","model", // gs://crown-of-thorns-data/model
                     "-tf","train.tfrec",
                     "-vf","val.tfrec ",
-                    "-bs","1",
-                    "-e","50"]
+                    "-bs","5",
+                    "-e","5"]
         }
     ]
 }
