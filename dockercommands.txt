@@ -22,5 +22,5 @@ sudo docker run --rm training                   \
 -md=gs://crown-of-thorns-data/model
 -tf=train.tfrec
 -vf=val.tfrec
--bs=4
+-bs=5
 -e=50
