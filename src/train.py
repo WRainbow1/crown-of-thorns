@@ -67,7 +67,7 @@ def main(cloud : int,
             blob.download_to_filename(local_trainfile)
 
         if local_valfile not in os.listdir():
-            blob = bucket.blob(f"{data_dir}/{train_file}")
+            blob = bucket.blob(f"{data_dir}/{val_file}")
             blob.download_to_filename(local_valfile)
 
     train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
