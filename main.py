@@ -41,25 +41,10 @@ if __name__ == '__main__':
         print('not running preprocessing, assuming tfrecords already available')
 
     if args.train:
-        print("Num GPUs Available:", len(tf.config.list_physical_devices('GPU')))
-        if len(tf.config.list_physical_devices('GPU')) > 0:
-
-            with tf.device('GPU:0'):
-                print('starting GPU')
-
-                train.main(args.cloud,
-                        args.model_dir,
-                        args.tfrecords_dir,
-                        args.train_file,
-                        args.val_file,
-                        args.batch_size,
-                        args.epochs)
-        
-        else:
-            train.main(args.cloud,
-            args.model_dir,
-            args.tfrecords_dir,
-            args.train_file,
-            args.val_file,
-            args.batch_size,
-            args.epochs)
+        train.main(args.cloud,
+                   args.model_dir,
+                   args.tfrecords_dir,
+                   args.train_file,
+                   args.val_file,
+                   args.batch_size,
+                   args.epochs)

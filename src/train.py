@@ -46,7 +46,7 @@ def main(cloud : int,
     callbacks_list = [
         tf.keras.callbacks.ModelCheckpoint(
             filepath=os.path.join("gs://crown-of-thorns-data"+model_dir if cloud else model_dir, 
-                                  "weights" + "_epoch_{epoch}"),
+                                  "weights" + "_epoch_{epoch}"+"val_loss_{val_loss}"),
             monitor="loss",
             save_best_only=False,
             save_weights_only=True,
@@ -73,14 +73,11 @@ def main(cloud : int,
     train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
     val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
 
-    train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
-    val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
-
     autotune = tf.data.AUTOTUNE
 
     train_dataset = train_dataset.map(preprocess_data, num_parallel_calls=autotune)
 
-    train_dataset = train_dataset.shuffle(batch_size)
+    train_dataset = train_dataset.shuffle(4 * batch_size)
     train_dataset = train_dataset.padded_batch(
         batch_size=batch_size, padding_values=(0.0, 1e-8, -1), drop_remainder=True, padded_shapes=([1024,1280,3], [None, None], [None])
     )
@@ -96,15 +93,32 @@ def main(cloud : int,
     val_dataset = val_dataset.map(label_encoder.encode_batch, num_parallel_calls=autotune)
     val_dataset = val_dataset.prefetch(autotune)
 
-    # Uncomment the following lines, when training on full dataset
-    model.fit(
-        train_dataset,
-        validation_data=val_dataset,
-        epochs=epochs,
-        callbacks=callbacks_list,
-        verbose=1,
-        batch_size=1
-    )
+
+    print("Num GPUs Available:", len(tf.config.list_physical_devices('GPU')))
+    if len(tf.config.list_physical_devices('GPU')) > 0:
+
+        with tf.device('GPU:0'):
+            print('starting GPU-enabled training')
+            model.fit(
+                train_dataset,
+                validation_data=val_dataset,
+                epochs=epochs,
+                callbacks=callbacks_list,
+                verbose=1,
+                batch_size=batch_size
+            )
+            
+    else:
+        print('starting PU only training')
+        model.fit(
+            train_dataset,
+            validation_data=val_dataset,
+            epochs=epochs,
+            callbacks=callbacks_list,
+            verbose=1,
+            batch_size=batch_size
+        )
+
 
     print('done')
 
