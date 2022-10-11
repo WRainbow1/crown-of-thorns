@@ -20,7 +20,7 @@
                     "-tfd","data/tfrecords", 
                     "-md","model", // gs://crown-of-thorns-data/model
                     "-tf","train.tfrec",
-                    "-vf","val.tfrec ",
+                    "-vf","val.tfrec",
                     "-bs","5",
                     "-e","5"]
         }
