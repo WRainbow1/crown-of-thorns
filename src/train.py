@@ -46,7 +46,7 @@ def main(cloud : int,
     callbacks_list = [
         tf.keras.callbacks.ModelCheckpoint(
             filepath=os.path.join(model_dir, 
-                                  "weights" + "_epoch_{epoch}"),
+                                  "weights" + "_epoch_{epoch}_valloss_{val_loss}"),
             monitor="loss",
             save_best_only=False,
             save_weights_only=True,
