@@ -13,7 +13,7 @@
             "justMyCode": true,
             "args": ["-p","0",
                     "-t" ,"1",
-                    "-c", "0",
+                    "-c", "1",
                     "-id","data/train_images",
                     "-ld","data",
                     "-lf","train.csv",

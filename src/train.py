@@ -73,9 +73,6 @@ def main(cloud : int,
     train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
     val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
 
-    train_dataset = tf.data.TFRecordDataset(local_trainfile).map(parse_tfrecord_fn)
-    val_dataset = tf.data.TFRecordDataset(local_valfile).map(parse_tfrecord_fn)
-
     autotune = tf.data.AUTOTUNE
 
     train_dataset = train_dataset.map(preprocess_data, num_parallel_calls=autotune)
@@ -96,14 +93,32 @@ def main(cloud : int,
     val_dataset = val_dataset.map(label_encoder.encode_batch, num_parallel_calls=autotune)
     val_dataset = val_dataset.prefetch(autotune)
 
-    # Uncomment the following lines, when training on full dataset
-    model.fit(
-        train_dataset,
-        validation_data=val_dataset,
-        epochs=epochs,
-        callbacks=callbacks_list,
-        verbose=1
-    )
+
+    print("Num GPUs Available:", len(tf.config.list_physical_devices('GPU')))
+    if len(tf.config.list_physical_devices('GPU')) > 0:
+
+        with tf.device('GPU:0'):
+            print('starting GPU-enabled training')
+            model.fit(
+                train_dataset,
+                validation_data=val_dataset,
+                epochs=epochs,
+                callbacks=callbacks_list,
+                verbose=1,
+                batch_size=batch_size
+            )
+            
+    else:
+        print('starting PU only training')
+        model.fit(
+            train_dataset,
+            validation_data=val_dataset,
+            epochs=epochs,
+            callbacks=callbacks_list,
+            verbose=1,
+            batch_size=batch_size
+        )
+
 
     print('done')
 

@@ -1,9 +1,17 @@
+#folders
 data/
 data temp/
 subset/
 src/retinanet/
-src/utils/creds.json
-__pycache__/
 .ipynb_checkpoints/
+__pycache__/
 
+#file types
 *.tfrec
+*.csv
+*.jpg
+*.jpeg
+*.png
+
+#specific files
+src/utils/creds.json

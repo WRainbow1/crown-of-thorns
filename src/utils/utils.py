@@ -229,17 +229,12 @@ def random_flip_horizontal(image, boxes):
     Returns:
       Randomly flipped image and boxes
     """
+    # NOT WORKING IN CURRENT FORMAT
     if tf.random.uniform(()) > 0.5:
         image = tf.image.flip_left_right(image)
-
-        if tf.equal(tf.size(boxes), 0):
-            return image, boxes
-        
-        else:
-            boxes = tf.stack(
-                [1 - boxes[:, 2], boxes[:, 1], 1 - boxes[:, 0], boxes[:, 3]], axis=-1
-            )
-            return image, boxes
+        boxes = tf.stack(
+            [1 - boxes[:, 2], boxes[:, 1], 1 - boxes[:, 0], boxes[:, 3]], axis=-1
+        )
     return image, boxes
 
 
@@ -309,7 +304,7 @@ def preprocess_data(sample):
     class_id = tf.cast(sample["objects"]["label"], dtype=tf.int32)
     image = tf.cast(image, dtype=tf.float32)
     # image, bbox = random_flip_horizontal(image, bbox)
-    #image, image_shape, _ = resize_and_pad_image(image)
+    # image, image_shape, _ = resize_and_pad_image(image)
     image_shape = tf.cast(tf.shape(image)[:2], dtype=tf.float32)
 
     bbox = tf.stack(
